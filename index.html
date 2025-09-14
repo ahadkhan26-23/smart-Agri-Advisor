@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Smart AgriAdvisor</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:0;background:#f7f7f7;color:#222}
+  header{background:#2b6cb0;color:white;padding:18px 14px;text-align:center;font-size:20px;font-weight:700}
+  .container{padding:14px;max-width:720px;margin:0 auto}
+  .card{background:white;padding:12px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:12px}
+  label{display:block;font-weight:600;margin-bottom:6px}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  button{background:#2b6cb0;color:white;border:none;padding:10px 12px;border-radius:6px;cursor:pointer}
+  button.secondary{background:#38a169}
+  button.gray{background:#718096}
+  select,input{padding:8px;border:1px solid #ddd;border-radius:6px;width:100%}
+  .status{font-weight:700;margin-top:6px}
+  .result{color:#c53030;font-weight:700;margin-top:8px}
+  .small{font-size:13px;color:#666}
+  .controls .btn{flex:1;min-width:110px}
+  .topline{display:flex;gap:8px;align-items:center}
+  pre {background:#0f1724;color:#e6eef8;padding:8px;border-radius:6px;overflow:auto}
+</style>
+</head>
+<body>
+<header>Smart AgriAdvisor (Web)</header>
+<div class="container">
+
+  <!-- ESP32 Connection -->
+  <div class="card">
+    <label>ESP32 Connection</label>
+    <div class="row">
+      <input id="espIp" placeholder="192.168.4.1" value="192.168.4.1"/>
+      <button id="btnConnect">Connect</button>
+      <button id="btnDisconnect" class="gray">Disconnect</button>
+    </div>
+    <div class="small">Connect phone & ESP32 to same network (or ESP32 AP mode).</div>
+    <span id="loadMsg" class="small"></span>
+  </div>
+
+  <!-- Soil Readings -->
+  <div class="card">
+    <label>Soil Readings</label>
+    <div id="lblPH">pH: --</div>
+    <div id="lblMoist">Moisture: --</div>
+    <div id="lblTemp">Temp: --</div>
+    <div class="row" style="margin-top:8px">
+      <button id="btnTakeReading">Take Soil Reading</button>
+      <button id="btnRefreshReading" class="gray">Refresh Reading</button>
+    </div>
+  </div>
+
+  <!-- Crop Selection -->
+  <div class="card">
+    <label>Crop Selection</label>
+    <select id="cropSelect"><option value="">-- Load crops --</option></select>
+    <div class="row controls" style="margin-top:8px">
+      <button id="btnCheck" class="btn">Check Suitability</button>
+      <button id="btnAI" class="btn secondary">AI Mode (Top suggestions)</button>
+    </div>
+    <div id="lblResult" class="result"></div>
+  </div>
+
+  <!-- Robot Controls -->
+  <div class="card">
+    <label>Robot Controls (Wi-Fi HTTP)</label>
+    <div class="row" style="margin-bottom:8px">
+      <button class="btn" data-act="forward">Forward</button>
+      <button class="btn" data-act="left">Left</button>
+      <button class="btn" data-act="stop">Stop</button>
+      <button class="btn" data-act="right">Right</button>
+      <button class="btn" data-act="backward">Backward</button>
+      <button class="btn" data-act="servoDip">Dip Servo</button>
+      <button class="btn" data-act="servoLift">Lift Servo</button>
+    </div>
+  </div>
+
+  <!-- Debug -->
+  <div class="card">
+    <label>Debug / Raw Response</label>
+    <pre id="debug">No data yet</pre>
+  </div>
+
+</div>
+
+<script>
+/* Google Sheets CSV */
+const DEFAULT_SHEET = "https://docs.google.com/spreadsheets/d/1jgdQAu4M52FunWfZo6UQIVQW8Bqhe1NvkhUl1q62AjQ/export?format=csv";
+
+let cropDB = []; 
+let phVal=0, moistVal=0, tempVal=0;
+let espConnected = false;
+let espUrl = "";
+
+/* Fallback crops (50 entries) */
+function fallbackDB(){
+  cropDB = [
+    ["Wheat",6,7.5,40,15],["Rice",5.5,7,60,20],["Maize",5.5,7,50,18],
+    ["Cotton",6,8,50,22],["Potato",5.5,7,30,15],["Tomato",5.5,7,30,20],
+    ["Onion",6,7,35,18],["Sugarcane",6,8,60,21],["Soybean",6,7.5,40,20],
+    ["Peanut",5.5,7,35,22],["Sunflower",6,7.5,30,18],["Barley",6,7.5,35,15],
+    ["Oats",5,7.5,35,15],["Millet",5,7.5,30,20],["Sorghum",5.5,7.5,35,22],
+    ["Chickpea",6,8,30,18],["Lentil",6,8,30,16],["Pea",6,7.5,35,15],
+    ["Mustard",5.5,7.5,30,18],["Groundnut",5.5,7.5,35,22],["Sesame",5.5,7.5,30,20],
+    ["Castor",5.5,7.5,30,20],["Jute",6,7.5,50,20],["Tea",4.5,6,60,18],
+    ["Coffee",5,6.5,60,20],["Banana",5.5,7.5,50,22],["Mango",5.5,7.5,30,25],
+    ["Apple",6,7,40,15],["Orange",5.5,6.5,40,20],["Grapes",6,7.5,35,20],
+    ["Papaya",6,7.5,40,22],["Guava",5,7.5,35,20],["Pineapple",4.5,6.5,50,22],
+    ["Pomegranate",5.5,7.5,35,20],["Cabbage",6,7.5,40,15],["Cauliflower",6,7.5,40,15],
+    ["Carrot",6,7,35,15],["Spinach",6,7.5,35,15],["Cucumber",5.5,7.5,40,18],
+    ["Chilli",5.5,7.5,40,20],["Brinjal",5.5,7.5,40,20],["Okra",6,7.5,40,20],
+    ["Pumpkin",6,7.5,40,18],["Melon",5.5,7.5,35,20],["Watermelon",5.5,7.5,35,22],
+    ["Strawberry",5.5,7,40,18],["Pear",6,7,35,15],["Plum",6,7.5,35,15]
+  ];
+  populateCropSelect();
+  setStatus("Loaded fallback 50 crops");
+}
+
+/* UI Updates */
+function setStatus(t){ document.getElementById('loadMsg').innerText = t; }
+
+function populateCropSelect(){
+  const sel = document.getElementById('cropSelect');
+  sel.innerHTML = "";
+  for(let row of cropDB){
+    const opt = document.createElement('option');
+    opt.value=row[0]; opt.text=row[0];
+    sel.appendChild(opt);
+  }
+}
+
+/* ESP32 Connection */
+document.getElementById('btnConnect').onclick = ()=>{
+  const ip = document.getElementById('espIp').value.trim();
+  if(!ip){ alert("Enter ESP32 IP"); return; }
+  espUrl = ip.startsWith("http")? ip: "http://"+ip;
+  espConnected = true;
+  setStatus("Connected to "+espUrl);
+};
+
+document.getElementById('btnDisconnect').onclick = ()=>{
+  espConnected=false; espUrl="";
+  setStatus("Disconnected");
+};
+
+async function callEsp(path){
+  if(!espConnected){ alert("ESP32 not connected!"); return null; }
+  const url = espUrl + (path.startsWith("/")? path: "/"+path);
+  try{
+    const r = await fetch(url);
+    const txt = await r.text();
+    document.getElementById('debug').innerText = txt;
+    return txt;
+  }catch(e){
+    document.getElementById('debug').innerText = "ERROR: "+e;
+    return null;
+  }
+}
+
+/* Soil Reading */
+function parseSensorText(txt){
+  const nums = txt.match(/-?\d+(\.\d+)?/g);
+  if(nums && nums.length>=3){
+    phVal=parseFloat(nums[0]);
+    moistVal=parseFloat(nums[1]);
+    tempVal=parseFloat(nums[2]);
+  }
+  document.getElementById('lblPH').innerText="pH: "+phVal;
+  document.getElementById('lblMoist').innerText="Moisture: "+moistVal;
+  document.getElementById('lblTemp').innerText="Temp: "+tempVal;
+}
+
+document.getElementById('btnTakeReading').onclick= async ()=>{
+  const txt=await callEsp("/readSensors");
+  if(txt) parseSensorText(txt);
+};
+
+document.getElementById('btnRefreshReading').onclick= async ()=>{
+  const txt=await callEsp("/readSensors");
+  if(txt) parseSensorText(txt);
+};
+
+/* Robot Control */
+document.querySelectorAll('.btn[data-act]').forEach(btn=>{
+  btn.onclick=()=>{ callEsp("/"+btn.dataset.act); };
+});
+
+/* Suitability Check */
+document.getElementById('btnCheck').onclick=()=>{
+  const crop=document.getElementById('cropSelect').value;
+  if(!crop){alert("Pick a crop");return;}
+  const row=cropDB.find(r=>r[0]==crop);
+  if(!row)return;
+  const [n,minPH,maxPH,minM,minT]=row;
+  const ok=phVal>=minPH && phVal<=maxPH && moistVal>=minM && tempVal>=minT;
+  document.getElementById('lblResult').innerText= ok? `✅ ${n} is Suitable` : `❌ ${n} Not Suitable`;
+};
+
+document.getElementById('btnAI').onclick=()=>{
+  const list=cropDB.filter(r=>phVal>=r[1]&&phVal<=r[2]&&moistVal>=r[3]&&tempVal>=r[4]).map(r=>r[0]);
+  document.getElementById('lblResult').innerText=list.length? "AI Suggests: "+list.slice(0,5).join(", "):"No matches";
+};
+
+/* Init */
+window.onload=fallbackDB;
+</script>
+</body>
+</html>
