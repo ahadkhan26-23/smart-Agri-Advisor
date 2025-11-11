@@ -367,6 +367,11 @@
         <button class="start-btn" onclick="startVideo()">Click to Begin ✨</button>
     </div>
 
+    <!-- Audio Element -->
+    <audio id="backgroundMusic" loop>
+        <source src="https://cdn.jsdelivr.net/gh/napthedev/nghe-nhac@master/assets/audio/perfect.mp3" type="audio/mpeg">
+    </audio>
+
     <!-- Music Toggle -->
     <button class="music-toggle" id="musicToggle" onclick="toggleMusic()" style="display: none;">
         🔊 Music On
@@ -484,6 +489,8 @@
         let autoPlayInterval;
         let isAutoPlaying = true;
         const sceneDuration = 6000; // 6 seconds per scene
+        let musicPlaying = false;
+        const audio = document.getElementById('backgroundMusic');
 
         function startVideo() {
             document.getElementById('startScreen').classList.add('hidden');
@@ -491,6 +498,8 @@
             document.getElementById('progressBar').style.display = 'flex';
             document.getElementById('musicToggle').style.display = 'block';
             startAutoPlay();
+            // Auto-play music
+            playMusic();
         }
 
         function showScene(index) {
@@ -553,13 +562,30 @@
             }
         }
 
+        function playMusic() {
+            audio.play().then(() => {
+                musicPlaying = true;
+                document.getElementById('musicToggle').textContent = '🔊 Music On';
+            }).catch(err => {
+                console.log('Auto-play prevented:', err);
+                musicPlaying = false;
+                document.getElementById('musicToggle').textContent = '🔇 Music Off (Click to play)';
+            });
+        }
+
         function toggleMusic() {
             const btn = document.getElementById('musicToggle');
-            // This is a placeholder - you can add actual audio functionality
-            if (btn.textContent.includes('On')) {
+            if (musicPlaying) {
+                audio.pause();
                 btn.textContent = '🔇 Music Off';
+                musicPlaying = false;
             } else {
-                btn.textContent = '🔊 Music On';
+                audio.play().then(() => {
+                    btn.textContent = '🔊 Music On';
+                    musicPlaying = true;
+                }).catch(err => {
+                    console.log('Playback error:', err);
+                });
             }
         }
 
