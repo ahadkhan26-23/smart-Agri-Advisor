@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday My Love 💖</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            background: #000;
+            color: #fff;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scene {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+        }
+
+        .scene.active {
+            opacity: 1;
+            z-index: 10;
+        }
+
+        .scene-text {
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            line-height: 1.8;
+            max-width: 900px;
+            text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.8);
+            animation: fadeInUp 1.5s ease-out;
+        }
+
+        .scene-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #ff6b9d, #ffc371, #ff6b9d);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 3s ease infinite, fadeInUp 1.5s ease-out;
+        }
+
+        /* Scene 1 - Sunrise */
+        #scene1 {
+            background: linear-gradient(to bottom, #ff9a56, #ff6b9d, #c471ed);
+            animation: sunriseGlow 8s ease-in-out infinite;
+        }
+
+        #scene1::before {
+            content: '💖';
+            position: absolute;
+            font-size: 150px;
+            opacity: 0.2;
+            animation: heartbeat 2s ease-in-out infinite;
+        }
+
+        /* Scene 2 - Memory Flash */
+        #scene2 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #scene2::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        /* Scene 3 - Floating Lights */
+        #scene3 {
+            background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+        }
+
+        .floating-light {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* Scene 4 - Warm Romantic */
+        #scene4 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        #scene4::after {
+            content: '❤️';
+            position: absolute;
+            font-size: 200px;
+            opacity: 0.15;
+            animation: rotate 20s linear infinite;
+        }
+
+        /* Scene 5 - Birthday Celebration */
+        #scene5 {
+            background: linear-gradient(to right, #fa709a 0%, #fee140 100%);
+        }
+
+        .balloon {
+            position: absolute;
+            font-size: 60px;
+            animation: balloonFloat 4s ease-in-out infinite;
+        }
+
+        /* Scene 6 - Romantic Montage */
+        #scene6 {
+            background: linear-gradient(to bottom, #ff6e7f, #bfe9ff);
+        }
+
+        .star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px white;
+            animation: twinkle 2s ease-in-out infinite;
+        }
+
+        /* Scene 7 - Ending */
+        #scene7 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        }
+
+        #scene7::before {
+            content: '💞';
+            position: absolute;
+            font-size: 300px;
+            opacity: 0.2;
+            animation: heartGlow 3s ease-in-out infinite;
+        }
+
+        /* Controls */
+        .controls {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.active {
+            background: white;
+            transform: scale(1.3);
+        }
+
+        .start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 1s ease-out;
+        }
+
+        .start-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .start-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            margin-bottom: 30px;
+            text-align: center;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .start-btn {
+            background: white;
+            color: #764ba2;
+            border: none;
+            padding: 20px 50px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            animation: pulse 2s ease-in-out infinite;
+            transition: transform 0.3s ease;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .music-toggle {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .music-toggle:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+        }
+
+        @keyframes balloonFloat {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes heartGlow {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.1); }
+        }
+
+        @keyframes sunriseGlow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+
+        @media (max-width: 768px) {
+            .scene-text {
+                font-size: 1rem;
+                padding: 20px;
+            }
+
+            .controls {
+                bottom: 20px;
+                gap: 10px;
+            }
+
+            .control-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Start Screen -->
+    <div class="start-screen" id="startScreen">
+        <div class="start-title">
+            💖 A Special Message 💖<br>
+            <span style="font-size: 0.5em; font-family: 'Poppins', sans-serif;">For the most beautiful girl in my world</span>
+        </div>
+        <button class="start-btn" onclick="startVideo()">Click to Begin ✨</button>
+    </div>
+
+    <!-- Music Toggle -->
+    <button class="music-toggle" id="musicToggle" onclick="toggleMusic()" style="display: none;">
+        🔊 Music On
+    </button>
+
+    <!-- Video Container -->
+    <div class="video-container">
+        <!-- Scene 1 -->
+        <div class="scene active" id="scene1">
+            <div class="scene-text">
+                <div class="scene-title">To the most beautiful girl in my world…</div>
+                My love, my best friend, my reason for everything. 💖
+            </div>
+        </div>
+
+        <!-- Scene 2 -->
+        <div class="scene" id="scene2">
+            <div class="scene-text">
+                <div class="scene-title">Two Years Together</div>
+                Two years of togetherness,<br>
+                Two years of endless love,<br>
+                Two years of growing, laughing, fighting, and healing together.
+            </div>
+        </div>
+
+        <!-- Scene 3 -->
+        <div class="scene" id="scene3">
+            <div class="scene-text">
+                You didn't just enter my life…<br>
+                You changed it — you made it brighter, softer, and real.<br>
+                You became my peace in chaos, my heartbeat in silence. ❤️
+            </div>
+            <div class="floating-light" style="left: 10%; animation-delay: 0s;"></div>
+            <div class="floating-light" style="left: 30%; animation-delay: 1s;"></div>
+            <div class="floating-light" style="left: 50%; animation-delay: 2s;"></div>
+            <div class="floating-light" style="left: 70%; animation-delay: 1.5s;"></div>
+            <div class="floating-light" style="left: 90%; animation-delay: 0.5s;"></div>
+        </div>
+
+        <!-- Scene 4 -->
+        <div class="scene" id="scene4">
+            <div class="scene-text">
+                <div class="scene-title">Every Little Thing</div>
+                Every little thing you do…<br>
+                Every smile, every word, every look —<br>
+                It all feels like home to me.
+            </div>
+        </div>
+
+        <!-- Scene 5 -->
+        <div class="scene" id="scene5">
+            <div class="scene-text">
+                <div class="scene-title">🎉 Happy Birthday, My Queen 🎉</div>
+                You deserve every happiness in the universe.<br>
+                You're not just my girlfriend —<br>
+                You're my soulmate, my future, my everything. 💫
+            </div>
+            <div class="balloon" style="left: 15%; top: 20%; animation-delay: 0s;">🎈</div>
+            <div class="balloon" style="left: 85%; top: 30%; animation-delay: 0.5s;">🎈</div>
+            <div class="balloon" style="left: 25%; top: 70%; animation-delay: 1s;">🎂</div>
+            <div class="balloon" style="left: 75%; top: 65%; animation-delay: 1.5s;">🎁</div>
+        </div>
+
+        <!-- Scene 6 -->
+        <div class="scene" id="scene6">
+            <div class="scene-text">
+                <div class="scene-title">Forever & Always</div>
+                Two years down,<br>
+                A lifetime to go.<br>
+                I promise to love you harder, care for you deeper,<br>
+                and stand beside you forever.
+            </div>
+            <div class="star" style="left: 10%; top: 20%; animation-delay: 0s;"></div>
+            <div class="star" style="left: 20%; top: 40%; animation-delay: 0.3s;"></div>
+            <div class="star" style="left: 80%; top: 30%; animation-delay: 0.6s;"></div>
+            <div class="star" style="left: 90%; top: 60%; animation-delay: 0.9s;"></div>
+            <div class="star" style="left: 50%; top: 15%; animation-delay: 1.2s;"></div>
+            <div class="star" style="left: 30%; top: 80%; animation-delay: 1.5s;"></div>
+            <div class="star" style="left: 70%; top: 75%; animation-delay: 1.8s;"></div>
+        </div>
+
+        <!-- Scene 7 -->
+        <div class="scene" id="scene7">
+            <div class="scene-text">
+                <div class="scene-title">Happy Birthday, My Love 💖</div>
+                You're my forever story —<br>
+                written in my heart,<br>
+                sealed with my soul.<br><br>
+                <span style="font-size: 1.5em; font-family: 'Playfair Display', serif;">– From your forever person, Ahad 💞</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls" id="controls" style="display: none;">
+        <button class="control-btn" onclick="previousScene()">← Previous</button>
+        <button class="control-btn" onclick="toggleAutoPlay()" id="playPauseBtn">⏸ Pause</button>
+        <button class="control-btn" onclick="nextScene()">Next →</button>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar" style="display: none;">
+        <div class="progress-dot active"></div>
+        <div class="progress-dot"></div>
+        <div class="progress-dot"></div>
+        <div class="progress-dot"></div>
+        <div class="progress-dot"></div>
+        <div class="progress-dot"></div>
+        <div class="progress-dot"></div>
+    </div>
+
+    <script>
+        let currentScene = 0;
+        const totalScenes = 7;
+        let autoPlayInterval;
+        let isAutoPlaying = true;
+        const sceneDuration = 6000; // 6 seconds per scene
+
+        function startVideo() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('controls').style.display = 'flex';
+            document.getElementById('progressBar').style.display = 'flex';
+            document.getElementById('musicToggle').style.display = 'block';
+            startAutoPlay();
+        }
+
+        function showScene(index) {
+            const scenes = document.querySelectorAll('.scene');
+            const dots = document.querySelectorAll('.progress-dot');
+            
+            scenes.forEach((scene, i) => {
+                scene.classList.remove('active');
+                if (i === index) {
+                    scene.classList.add('active');
+                }
+            });
+
+            dots.forEach((dot, i) => {
+                dot.classList.remove('active');
+                if (i === index) {
+                    dot.classList.add('active');
+                }
+            });
+
+            currentScene = index;
+        }
+
+        function nextScene() {
+            if (currentScene < totalScenes - 1) {
+                showScene(currentScene + 1);
+            } else {
+                showScene(0); // Loop back to start
+            }
+        }
+
+        function previousScene() {
+            if (currentScene > 0) {
+                showScene(currentScene - 1);
+            } else {
+                showScene(totalScenes - 1); // Go to last scene
+            }
+        }
+
+        function startAutoPlay() {
+            autoPlayInterval = setInterval(() => {
+                nextScene();
+            }, sceneDuration);
+        }
+
+        function stopAutoPlay() {
+            clearInterval(autoPlayInterval);
+        }
+
+        function toggleAutoPlay() {
+            const btn = document.getElementById('playPauseBtn');
+            if (isAutoPlaying) {
+                stopAutoPlay();
+                btn.textContent = '▶ Play';
+                isAutoPlaying = false;
+            } else {
+                startAutoPlay();
+                btn.textContent = '⏸ Pause';
+                isAutoPlaying = true;
+            }
+        }
+
+        function toggleMusic() {
+            const btn = document.getElementById('musicToggle');
+            // This is a placeholder - you can add actual audio functionality
+            if (btn.textContent.includes('On')) {
+                btn.textContent = '🔇 Music Off';
+            } else {
+                btn.textContent = '🔊 Music On';
+            }
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextScene();
+            if (e.key === 'ArrowLeft') previousScene();
+            if (e.key === ' ') {
+                e.preventDefault();
+                toggleAutoPlay();
+            }
+        });
+
+        // Touch swipe support for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) nextScene();
+            if (touchEndX > touchStartX + 50) previousScene();
+        }
+    </script>
+</body>
+</html>
